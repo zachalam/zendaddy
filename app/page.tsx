@@ -11,14 +11,22 @@ import {
 } from "frames.js/next/server";
 import Link from "next/link";
 import { DEFAULT_DEBUGGER_HUB_URL, createDebugUrl } from "./debug";
-import { currentURL } from "./utils";
+import { currentURL, getRandomSubarray } from "./utils";
 
 type State = {
   active: string;
   total_button_presses: number;
+  feelings_felt: any;
 };
 
-const initialState = { active: "1", total_button_presses: 0 };
+const GLOBAL_FEELINGS = ["Calm", "Centered", "Content", "Fulfilled", "Patient", "Peaceful", "Present", "Relaxed", "Serene", "Trusting"];
+const tones = ["dumbledore", "spongebob", "thor", "zoltar"];
+const initialState = {
+  active: "1",
+  total_button_presses: 0,
+  feelings: [],
+  pageIndex: 0
+};
 
 const reducer: FrameReducer<State> = (state, action) => {
   return {
@@ -26,8 +34,11 @@ const reducer: FrameReducer<State> = (state, action) => {
     active: action.postBody?.untrustedData.buttonIndex
       ? String(action.postBody?.untrustedData.buttonIndex)
       : "1",
+    feelings: state.total_button_presses < 4 ? [...state.feelings, state.word] : state.feelings,
   };
 };
+
+
 
 // This is a react server component only
 export default async function Home({ searchParams }: NextServerPageProps) {
@@ -48,71 +59,88 @@ export default async function Home({ searchParams }: NextServerPageProps) {
     previousFrame
   );
 
+  const wrapFrame = (image, buttons) => {
+    return (
+      <div className="p-4">
+        frames.js starter kit. The Template Frame is on this page, it&apos;s in
+        the html meta tags (inspect source).{" "}
+        <Link href={createDebugUrl(url)} className="underline">
+          Debug
+        </Link>{" "}
+        or see{" "}
+        <Link href="/examples" className="underline">
+          other examples
+        </Link>
+        <FrameContainer
+          postUrl="/frames"
+          pathname="/"
+          state={state}
+          previousFrame={previousFrame}
+        >
+          {/* <FrameImage src="https://framesjs.org/og.png" /> */}
+          <FrameImage aspectRatio="1.91:1">
+            <div tw="flex flex-col w-full h-full bg-lime-700 text-white justify-center items-center">
+              {image}
+            </div>
+          </FrameImage>
+          {buttons}
+        </FrameContainer>
+      </div>
+    )
+
+  }
+
   // Here: do a server side side effect either sync or async (using await), such as minting an NFT if you want.
   // example: load the users credentials & check they have an NFT
 
   console.log("info: state is:", state);
 
-  // then, when done, return next frame
-  return (
-    <div className="p-4">
-      frames.js starter kit. The Template Frame is on this page, it&apos;s in
-      the html meta tags (inspect source).{" "}
-      <Link href={createDebugUrl(url)} className="underline">
-        Debug
-      </Link>{" "}
-      or see{" "}
-      <Link href="/examples" className="underline">
-        other examples
-      </Link>
-      <FrameContainer
-        postUrl="/frames"
-        pathname="/"
-        state={state}
-        previousFrame={previousFrame}
-      >
-        {/* <FrameImage src="https://framesjs.org/og.png" /> */}
-        <FrameImage aspectRatio="1.91:1">
-          <div tw="w-full h-full bg-slate-700 text-white justify-center items-center flex flex-col">
-            <div tw="flex flex-row">
-              {frameMessage?.inputText ? frameMessage.inputText : "Hello world"}
-            </div>
-            {frameMessage && (
-              <div tw="flex flex-col">
-                <div tw="flex">
-                  Requester is @{frameMessage.requesterUserData?.username}{" "}
-                </div>
-                <div tw="flex">
-                  Requester follows caster:{" "}
-                  {frameMessage.requesterFollowsCaster ? "true" : "false"}
-                </div>
-                <div tw="flex">
-                  Caster follows requester:{" "}
-                  {frameMessage.casterFollowsRequester ? "true" : "false"}
-                </div>
-                <div tw="flex">
-                  Requester liked cast:{" "}
-                  {frameMessage.likedCast ? "true" : "false"}
-                </div>
-                <div tw="flex">
-                  Requester recasted cast:{" "}
-                  {frameMessage.recastedCast ? "true" : "false"}
-                </div>
-              </div>
-            )}
-          </div>
-        </FrameImage>
-        <FrameInput text="put some text here" />
+  if (state.total_button_presses < 4) {
+    // ask emotions
+    return wrapFrame(
+
+      <div tw="flex-none pl-32 pr-32 text-8xl">
+        {"🤔 Which word best describes how you're feeling?"}
+      </div>
+
+      ,
+      getRandomSubarray(GLOBAL_FEELINGS, 4).map((word) => (
         <FrameButton>
-          {state?.active === "1" ? "Active" : "Inactive"}
+          {word}
         </FrameButton>
-        <FrameButton>
-          {state?.active === "2" ? "Active" : "Inactive"}
-        </FrameButton>
-        <FrameButton action="link" target={`https://www.google.com`}>
-          External
-        </FrameButton>
-      </FrameContainer>
-    </div>
-  );
+      ))
+    );
+
+
+  } else {
+    if (state.total_button_presses == 4) {
+      // ask for tone
+
+      return wrapFrame(
+        <div tw="pl-32 pr-32 flex flex-row text-8xl">
+          {"🧙 Who would you like to get a response from?"}
+        </div>,
+        getRandomSubarray(tones, 4).map((word) => (
+          <FrameButton>
+            {word}
+          </FrameButton>
+        ))
+      );
+
+    } else {
+      // show results.
+
+      return wrapFrame(
+        <div tw="flex flex-row">
+          {frameMessage?.inputText ? frameMessage.inputText : "Who would you like to get a response from?"}
+        </div>,
+        getRandomSubarray(tones, 4).map((word) => (
+          <FrameButton>
+            {word}
+          </FrameButton>
+        ))
+      );
+
+    }
+  }
 }
