@@ -131,8 +131,8 @@ export default async function Home({ searchParams }: NextServerPageProps) {
       // show results.
 
       return wrapFrame(
-        <div tw="flex flex-row">
-          {"'Here's where we can put the response for the call to the LLM..'"}
+        <div tw="pl-32 pr-32 flex flex-row">
+          {"'Ah, my dear friend, your emotional spectrum seems as diverse as the facets of a wizard's mind. Your audacious spirit embarks on ventures of grandeur, yet within it, a smoldering ember of humility and perfection flickers, guiding your path with wisdom and grace. Embrace this balance, for it is the mark of a truly remarkable soul.'"}
         </div>,
         <FrameButton>
             share
