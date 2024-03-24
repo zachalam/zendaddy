@@ -132,13 +132,11 @@ export default async function Home({ searchParams }: NextServerPageProps) {
 
       return wrapFrame(
         <div tw="flex flex-row">
-          {frameMessage?.inputText ? frameMessage.inputText : "Who would you like to get a response from?"}
+          {"'Here's where we can put the response for the call to the LLM..'"}
         </div>,
-        getRandomSubarray(tones, 4).map((word) => (
-          <FrameButton>
-            {word}
-          </FrameButton>
-        ))
+        <FrameButton>
+            share
+        </FrameButton>
       );
 
     }
